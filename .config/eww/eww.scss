@@ -1,0 +1,80 @@
+body {
+    padding: 0;
+}
+
+$text-color: #434343;
+
+.topbar {
+    border-radius: 10px;
+    background-color: #DAD9FF;
+    font-size: 12.5px;
+    font-family: "agave Nerd Font";
+}
+
+.dockbox {
+    background-color: #cecdf2;
+    color: $text-color;
+    margin: 5px 0px;
+    border-radius: 20px;
+    padding: 5px 15px;
+}
+
+.infotext {
+    color: $text-color;
+}
+
+.systray {
+    padding: 0px 12px;
+
+    .icons {
+        background-color: transparent;
+        all: unset;
+
+        image {
+            margin: 0px -4px;
+        }
+    }
+}
+
+.arch {
+    margin-left: 15px;
+}
+
+.playbutton {
+    color: #ea64b6;
+}
+
+.trackbutton {
+    color: #6f92d4;
+}
+
+.user {
+    color: #d87ce4;
+}
+
+
+.trayicon {
+    font-size: 14px;
+}
+
+.workspaces {
+    .icon {
+        margin: 0px 6px;
+    }
+
+    .entry {
+        font-size: 14px;
+
+        &.current {
+            color: #bf1b80;
+        }
+
+        &.occupied {
+            color: rgb(79, 112, 196);
+        }
+
+        &.empty {
+            color: #8d73bb;
+        }
+    }
+}

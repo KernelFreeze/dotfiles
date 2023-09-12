@@ -1,0 +1,149 @@
+(defwidget bar []
+  (centerbox :orientation "h"
+    (system)
+    (workspaces)
+    (status)
+  ))
+
+(deflisten workspaces :initial "[]" "bash ~/.config/eww/scripts/get-workspaces")
+(deflisten current_workspace :initial "1" "bash ~/.config/eww/scripts/get-active-workspace")
+(defwidget workspaces []
+  (box :class "dockbox"
+    (eventbox :class "workspaces" :onscroll "bash ~/.config/eww/scripts/change-active-workspace {} ${current_workspace}"
+      (box :space-evenly true
+        (label :text "${workspaces}${current_workspace}" :visible false)
+        (for workspace in workspaces
+          (eventbox :onclick "hyprctl dispatch workspace ${workspace.id}"
+            (box :class "entry ${workspace.id == current_workspace ? "current" : workspace.windows > 0 ? "occupied" : "empty"}"
+              (label :class "icon" :text "${workspace.id == current_workspace ? "󰮯" : workspace.windows > 0 ? "󰊠" : "󰑊"}")
+            )
+          )
+        )
+      )
+    )
+  )
+)
+
+;; Time vars
+(defpoll TIME :interval "5s" `date +\"%I:%M %p\"`)
+
+;; Music vars
+(defpoll STATUS :interval "5s" `playerctl status`)
+(defpoll VOLUME :interval "5s" `scripts/music_info --volume`)
+(defpoll TRACK :interval "5s" `scripts/music_info --track`)
+
+;; System vars
+(defpoll CPU :interval "5s" `scripts/sys_info --cpu`)
+(defpoll MEM :interval "15s" `scripts/sys_info --mem`)
+(defpoll DISK :interval "30s" `scripts/sys_info --disk`)
+(defpoll NETSTAT :interval "10s" `scripts/check-network --stat`)
+(defpoll UPDATES :interval "1h" `scripts/updates --get-updates`)
+
+;; User
+(defvar IMAGE "images/icons/user.png")
+(defpoll USER :interval "10m" `whoami`)
+
+;; ** Widgets *************************************************************************
+
+;; time
+(defwidget time []
+  (box :class "dockbox" :space-evenly "false" :spacing 14
+    (label :class "trayicon" :style "color: #C23C6F" :text "")
+    (label :text TIME)
+  )
+)
+
+;; music
+(defwidget music []
+  (box :class "dockbox"
+    (box :class "musicbuttons" :orientation "h" :spacing 10 :valign "center" :halign "start" :space-evenly "false" :vexpand "false" :hexpand "false"
+      (eventbox :class "trackbutton" :onclick "playerctl previous"
+        (label :text ""))
+      (eventbox :class "playbutton" :onclick "playerctl play-pause"
+        (label :text "${STATUS == "Playing" ? " " : ""}"))
+      (eventbox :class "trackbutton" :onclick "playerctl next"
+        (label :text ""))
+    )
+  )
+)
+
+(defwidget music_track []
+  (box :orientation "h" :spacing 15 :valign "center" :halign "center" :space-evenly "false" :vexpand "false" :hexpand "false" :style "margin-right: 20px;"
+    (label :class "trayicon" :style "color: #f581a2" :text "")
+    (box :orientation "h" :spacing 2 :valign "center" :halign "center" :space-evenly "false" :vexpand "false" :hexpand "false"
+      (label :class "trayicon" :style "color: #f581a2" :text "[")
+      (label :class "infotext" :limit-width 40 :halign "start" :text TRACK)
+      (label :class "trayicon" :style "color: #f581a2" :text "]")
+    )
+  )
+)
+
+;; system
+(defwidget system []
+  (box :orientation "h" :spacing 5 :valign "center" :halign "start" :space-evenly "false" :vexpand "false" :hexpand "false"
+    ;; Arch logo
+    (box :class "arch" :orientation "h" :spacing 2 :valign "center" :halign "center" :space-evenly "false" :vexpand "false" :hexpand "false"
+      (label :style "color: #0A9CF5; font-size: 18px" :text "󰣇 ")
+      (label :class "trayicon" :style "color: #6D8895" :text " 󰇙 ")
+    )
+    ;; User name
+    (box :class "dockbox" :orientation "h" :spacing 3 :valign "center" :halign "center" :space-evenly "false" :vexpand "false" :hexpand "false"
+      (label :class "trayicon user" :text " ")
+      (label :class "infotext" :halign "start" :text USER))
+    ;; Cpu usage
+    (box :class "dockbox" :orientation "h" :spacing 3 :valign "center" :halign "center" :space-evenly "false" :vexpand "false" :hexpand "false"
+      (label :class "trayicon" :style "color: #B44B54" :text "󰍛 ")
+      (label :class "infotext" :halign "start" :text CPU))
+    ;; Memory usage
+    (box :class "dockbox" :orientation "h" :spacing 3 :valign "center" :halign "center" :space-evenly "false" :vexpand "false" :hexpand "false"
+      (label :class "trayicon" :style "color: #52a0b1" :text " ")
+      (label :class "infotext" :halign "start" :text MEM))
+    ;; Disk usage
+    (box :class "dockbox" :orientation "h" :spacing 3 :valign "center" :halign "center" :space-evenly "false" :vexpand "false" :hexpand "false"
+      (label :class "trayicon" :style "color: #BD8C46" :text " ")
+      (label :class "infotext" :text DISK))
+    (music)
+  )
+)
+
+;; Status
+(defwidget status []
+  (box :orientation "h" :spacing 5 :valign "center" :halign "end" :space-evenly "false" :vexpand "false" :hexpand "false" :style "margin-right: 10px;"
+    ;; Music track
+    (box :visible {STATUS == "Playing"} (music_track))
+    ;; Updates
+    (box :class "dockbox" :orientation "h" :spacing 8 :valign "center" :halign "center" :space-evenly "false" :vexpand "false" :hexpand "false"
+      (label :class "trayicon" :style "color: #3F808F" :text " ")
+      (label :class "infotext" :halign "start" :text UPDATES)
+    )
+    ;; Volume
+    (box :class "dockbox" :orientation "h" :spacing 3 :valign "center" :halign "center" :space-evenly "false" :vexpand "false" :hexpand "false"
+      (label :class "trayicon" :style "color: #788FE4" :text " ")
+      (label :class "infotext" :halign "start" :text VOLUME)
+    )
+    ;; System tray
+    (box :class "dockbox systray"
+      (systray :class "icons" :pack-direction "ltr" :icon-size 15)
+    )
+    (time)
+  )
+)
+
+(defwindow topbar
+  :monitor 0
+  :exclusive true
+  :focusable false
+  :stacking "fg"
+  :namespace "topbar"
+  
+  :geometry (geometry
+    :x "0%"
+    :x "0%"
+    :y "15px"
+    :width "90%"
+    :height "20px"
+    :anchor "top center"
+  )
+  
+  (bar)
+)
